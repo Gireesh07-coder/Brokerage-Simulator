@@ -1,0 +1,43 @@
+<div class="container">
+
+  <h1>Brokerage Simulator</h1>
+
+  <div class="form-card">
+
+    <h2>Create Trading Account</h2>
+
+    <label for="name">Name</label>
+    <input
+      id="name"
+      type="text"
+      [(ngModel)]="name"
+      placeholder="Enter your name"
+    />
+
+    <label for="balance">Initial Balance</label>
+    <input
+      id="balance"
+      type="number"
+      [(ngModel)]="initialBalance"
+      placeholder="Enter initial balance"
+    />
+
+    <button (click)="createAccount()">
+      Create Account
+    </button>
+
+  </div>
+
+  @if (account) {
+    <div class="account-card">
+
+      <h2>Account Created ✅</h2>
+
+      <p><strong>ID:</strong> {{ account.id }}</p>
+      <p><strong>Name:</strong> {{ account.name }}</p>
+      <p><strong>Balance:</strong> ₹{{ account.cashBalance }}</p>
+
+    </div>
+  }
+
+</div>
