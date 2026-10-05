@@ -1,43 +1,907 @@
-<div class="container">
+<div class="app-shell">
 
-  <h1>Brokerage Simulator</h1>
+  <!-- =========================
+       SIDEBAR
+       ========================= -->
 
-  <div class="form-card">
+  <aside class="sidebar">
 
-    <h2>Create Trading Account</h2>
+    <div class="brand">
 
-    <label for="name">Name</label>
-    <input
-      id="name"
-      type="text"
-      [(ngModel)]="name"
-      placeholder="Enter your name"
-    />
+      <div class="brand-logo">
+        B
+      </div>
 
-    <label for="balance">Initial Balance</label>
-    <input
-      id="balance"
-      type="number"
-      [(ngModel)]="initialBalance"
-      placeholder="Enter initial balance"
-    />
-
-    <button (click)="createAccount()">
-      Create Account
-    </button>
-
-  </div>
-
-  @if (account) {
-    <div class="account-card">
-
-      <h2>Account Created ✅</h2>
-
-      <p><strong>ID:</strong> {{ account.id }}</p>
-      <p><strong>Name:</strong> {{ account.name }}</p>
-      <p><strong>Balance:</strong> ₹{{ account.cashBalance }}</p>
+      <div class="brand-name">
+        Brokerage
+      </div>
 
     </div>
-  }
+
+
+    <nav class="navigation">
+
+      <a class="nav-item active">
+        <span class="nav-icon">⌂</span>
+        Dashboard
+      </a>
+
+      <a class="nav-item">
+        <span class="nav-icon">↗</span>
+        Markets
+      </a>
+
+      <a class="nav-item">
+        <span class="nav-icon">▣</span>
+        Portfolio
+      </a>
+
+      <a class="nav-item">
+        <span class="nav-icon">▤</span>
+        Orders
+      </a>
+
+      <a class="nav-item">
+        <span class="nav-icon">↔</span>
+        Transactions
+      </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+      <a class="nav-item">
+        <span class="nav-icon">⚙</span>
+        Settings
+      </a>
+
+
+      <div class="profile">
+
+        <div class="avatar">
+          G
+        </div>
+
+        <div class="profile-info">
+
+          <strong>
+            {{ account?.name || 'Gireesh' }}
+          </strong>
+
+          <span>
+            Paper Trading
+          </span>
+
+        </div>
+
+        <span class="profile-arrow">
+          ›
+        </span>
+
+      </div>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =========================
+       MAIN
+       ========================= -->
+
+  <main class="main">
+
+    <!-- Header -->
+
+    <header class="topbar">
+
+      <div>
+
+        <h1>
+          Good afternoon, {{ account?.name || 'Gireesh' }}
+        </h1>
+
+        <div class="market-status">
+
+          <span
+            class="status-dot"
+            [class.closed]="marketStatus === 'CLOSED'"
+          ></span>
+
+          <strong>
+            {{ marketStatusText }}
+          </strong>
+
+          <span>
+            {{ marketStatusDescription }}
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="topbar-actions">
+
+        <button class="icon-button">
+          ♢
+        </button>
+
+        <button class="icon-button">
+          ◔
+        </button>
+
+        <div class="top-avatar">
+          G
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <div class="content">
+
+
+      <!-- =========================
+           SUMMARY
+           ========================= -->
+
+      <section class="summary-grid">
+
+        <div class="summary-card">
+
+          <div class="summary-label">
+            Available Cash
+          </div>
+
+          <div class="summary-value">
+            ₹{{ account?.cashBalance | number:'1.2-2' }}
+          </div>
+
+          <div class="summary-footer">
+            Ready to trade
+          </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+          <div class="summary-label">
+            Holdings Value
+          </div>
+
+          <div class="summary-value">
+            ₹{{ portfolioValue | number:'1.2-2' }}
+          </div>
+
+          <div class="summary-footer">
+            Current market value
+          </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+          <div class="summary-label">
+            Total Account Value
+          </div>
+
+          <div class="summary-value">
+            ₹{{ totalAccountValue | number:'1.2-2' }}
+          </div>
+
+          <div class="summary-footer">
+            Cash + holdings
+          </div>
+
+        </div>
+
+
+        <div class="summary-card highlight">
+
+          <div class="summary-label">
+            Transactions
+          </div>
+
+          <div class="summary-value">
+            {{ transactions.length }}
+          </div>
+
+          <div class="summary-footer">
+            Executed trades
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           MESSAGE
+           ========================= -->
+
+      <div
+        *ngIf="message"
+        class="toast"
+        [class.error]="messageType === 'error'"
+      >
+
+        <span>
+          {{ messageType === 'success' ? '✓' : '!' }}
+        </span>
+
+        {{ message }}
+
+      </div>
+
+
+      <!-- =========================
+           MARKET + ORDER
+           ========================= -->
+
+      <section class="main-grid">
+
+
+        <!-- Market Watch -->
+
+        <div class="panel market-panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h2>
+                Market Watch
+              </h2>
+
+              <span>
+                NSE Equity
+              </span>
+
+            </div>
+
+            <button class="view-button">
+              View market →
+            </button>
+
+          </div>
+
+
+          <div class="market-table-header">
+
+            <span>Stock</span>
+            <span>Price</span>
+            <span>Change</span>
+
+          </div>
+
+
+          <div class="market-list">
+
+            <div
+              class="market-row"
+              *ngFor="let stock of stocks"
+              [class.selected]="selectedStockId === stock.id"
+              (click)="selectStock(stock.id)"
+            >
+
+              <div class="stock-info">
+
+                <div class="stock-symbol">
+                  {{ stock.symbol }}
+                </div>
+
+                <div class="stock-name">
+                  {{ stock.companyName }}
+                </div>
+
+              </div>
+
+
+              <div class="stock-price">
+
+                ₹{{ stock.currentPrice | number:'1.2-2' }}
+
+              </div>
+
+
+              <div class="stock-change positive">
+
+                +0.00%
+
+              </div>
+
+            </div>
+
+
+            <div
+              *ngIf="stocks.length === 0"
+              class="empty-market"
+            >
+              No market data available.
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Order Ticket -->
+
+        <div class="panel order-panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h2>
+                Order Ticket
+              </h2>
+
+              <span>
+                Place an order
+              </span>
+
+            </div>
+
+
+            <span
+              class="order-status"
+              [class.closed]="marketStatus === 'CLOSED'"
+            >
+
+              {{ marketStatus === 'OPEN' ? 'Trading Open' : 'Trading Closed' }}
+
+            </span>
+
+          </div>
+
+
+          <div
+            *ngIf="selectedStock"
+            class="selected-stock"
+          >
+
+            <div>
+
+              <div class="selected-symbol">
+                {{ selectedStock.symbol }}
+              </div>
+
+              <div class="selected-company">
+                {{ selectedStock.companyName }}
+              </div>
+
+            </div>
+
+
+            <div class="selected-price">
+
+              <strong>
+                ₹{{ selectedStock.currentPrice | number:'1.2-2' }}
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="order-fields">
+
+            <div class="field">
+
+              <label>
+                Quantity
+              </label>
+
+              <input
+                type="number"
+                [(ngModel)]="quantity"
+                min="1"
+              />
+
+            </div>
+
+
+            <div class="field">
+
+              <label>
+                Order Type
+              </label>
+
+              <select disabled>
+
+                <option>
+                  MARKET
+                </option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+
+          <div class="order-summary">
+
+            <div>
+
+              <span>
+                Trade Value
+              </span>
+
+              <strong>
+                ₹{{ tradeValue | number:'1.2-2' }}
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                Brokerage
+              </span>
+
+              <strong>
+                ₹{{ estimatedBrokerage | number:'1.2-2' }}
+              </strong>
+
+            </div>
+
+
+            <div class="order-total">
+
+              <span>
+                Estimated Total
+              </span>
+
+              <strong>
+                ₹{{ estimatedBuyTotal | number:'1.2-2' }}
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="trade-actions">
+
+            <button
+              class="buy-button"
+              [disabled]="isTrading || marketStatus === 'CLOSED'"
+              (click)="buyStock()"
+            >
+
+              <span *ngIf="!isTrading">
+                BUY
+              </span>
+
+              <span *ngIf="isTrading">
+                PROCESSING...
+              </span>
+
+            </button>
+
+
+            <button
+              class="sell-button"
+              [disabled]="isTrading || marketStatus === 'CLOSED'"
+              (click)="sellStock()"
+            >
+
+              SELL
+
+            </button>
+
+          </div>
+
+
+          <div class="order-note">
+
+            Orders are executed using the current simulated market price.
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           PORTFOLIO
+           ========================= -->
+
+      <section class="panel holdings-panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2>
+              Your Holdings
+            </h2>
+
+            <span>
+              {{ portfolio.length }} position(s)
+            </span>
+
+          </div>
+
+          <button class="view-button">
+            View portfolio →
+          </button>
+
+        </div>
+
+
+        <div
+          *ngIf="portfolio.length > 0"
+          class="holdings-table"
+        >
+
+          <div class="holdings-header">
+
+            <span>Stock</span>
+            <span>Quantity</span>
+            <span>Current Price</span>
+            <span>Current Value</span>
+
+          </div>
+
+
+          <div
+            class="holding-row"
+            *ngFor="let holding of portfolio"
+          >
+
+            <div class="holding-stock">
+
+              <div class="mini-stock-icon">
+                {{ holding.stock.symbol.charAt(0) }}
+              </div>
+
+              <div>
+
+                <strong>
+                  {{ holding.stock.symbol }}
+                </strong>
+
+                <span>
+                  {{ holding.stock.companyName }}
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <strong>
+              {{ holding.quantity }}
+            </strong>
+
+
+            <strong>
+              ₹{{ holding.stock.currentPrice | number:'1.2-2' }}
+            </strong>
+
+
+            <strong>
+              ₹{{
+                holding.stock.currentPrice *
+                holding.quantity
+                | number:'1.2-2'
+              }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div
+          *ngIf="portfolio.length === 0"
+          class="empty-state"
+        >
+
+          <div class="empty-icon">
+            +
+          </div>
+
+          <strong>
+            No holdings yet
+          </strong>
+
+          <span>
+            Select a stock and place your first order.
+          </span>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           RECENT TRANSACTIONS
+           ========================= -->
+
+      <section class="panel transactions-panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2>
+              Recent Transactions
+            </h2>
+
+            <span>
+              Latest executed trades
+            </span>
+
+          </div>
+
+          <button class="view-button">
+            View all →
+          </button>
+
+        </div>
+
+
+        <div
+          *ngIf="transactions.length > 0"
+          class="transactions-table"
+        >
+
+          <div class="transaction-header">
+
+            <span>Type</span>
+            <span>Stock</span>
+            <span>Qty</span>
+            <span>Price</span>
+            <span>Brokerage</span>
+            <span>Total</span>
+            <span>Date</span>
+
+          </div>
+
+
+          <div
+            class="transaction-row"
+            *ngFor="let transaction of transactions"
+          >
+
+            <div>
+
+              <span
+                class="type-badge"
+                [class.buy]="transaction.type === 'BUY'"
+                [class.sell]="transaction.type === 'SELL'"
+              >
+
+                {{ transaction.type }}
+
+              </span>
+
+            </div>
+
+
+            <div class="transaction-stock">
+
+              <strong>
+                {{ transaction.stock.symbol }}
+              </strong>
+
+              <span>
+                {{ transaction.stock.companyName }}
+              </span>
+
+            </div>
+
+
+            <strong>
+              {{ transaction.quantity }}
+            </strong>
+
+
+            <span>
+              ₹{{ transaction.price | number:'1.2-2' }}
+            </span>
+
+
+            <span>
+              ₹{{ transaction.brokerage | number:'1.2-2' }}
+            </span>
+
+
+            <strong>
+              ₹{{ transaction.totalAmount | number:'1.2-2' }}
+            </strong>
+
+
+            <span>
+              {{ transaction.transactionTime | date:'dd MMM, hh:mm a' }}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div
+          *ngIf="transactions.length === 0"
+          class="empty-state"
+        >
+
+          <div class="empty-icon">
+            ↔
+          </div>
+
+          <strong>
+            No transactions yet
+          </strong>
+
+          <span>
+            Your executed trades will appear here.
+          </span>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <!-- =========================
+       ADD FUNDS MODAL
+       ========================= -->
+
+  <div
+    *ngIf="showAddFundsModal"
+    class="modal-backdrop"
+    (click)="closeAddFunds()"
+  >
+
+    <div
+      class="funds-modal"
+      (click)="$event.stopPropagation()"
+    >
+
+      <div class="modal-header">
+
+        <div>
+
+          <h2>
+            Add Funds
+          </h2>
+
+          <span>
+            Add virtual money to your trading account.
+          </span>
+
+        </div>
+
+        <button
+          class="close-button"
+          (click)="closeAddFunds()"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="funds-balance">
+
+        <span>
+          Current Balance
+        </span>
+
+        <strong>
+          ₹{{ account?.cashBalance | number:'1.2-2' }}
+        </strong>
+
+      </div>
+
+
+      <label class="funds-label">
+        Amount
+      </label>
+
+
+      <div class="fund-input">
+
+        <span>
+          ₹
+        </span>
+
+        <input
+          type="number"
+          [(ngModel)]="depositAmount"
+          min="1"
+          placeholder="Enter amount"
+        />
+
+      </div>
+
+
+      <div class="quick-amounts">
+
+        <button
+          (click)="depositAmount = 5000"
+        >
+          ₹5,000
+        </button>
+
+        <button
+          (click)="depositAmount = 10000"
+        >
+          ₹10,000
+        </button>
+
+        <button
+          (click)="depositAmount = 25000"
+        >
+          ₹25,000
+        </button>
+
+        <button
+          (click)="depositAmount = 50000"
+        >
+          ₹50,000
+        </button>
+
+      </div>
+
+
+      <div class="new-balance">
+
+        <span>
+          New Balance
+        </span>
+
+        <strong>
+          ₹{{
+            (account?.cashBalance || 0) +
+            (depositAmount || 0)
+            | number:'1.2-2'
+          }}
+        </strong>
+
+      </div>
+
+
+      <div class="modal-actions">
+
+        <button
+          class="cancel-button"
+          (click)="closeAddFunds()"
+        >
+          Cancel
+        </button>
+
+        <button
+          class="confirm-funds-button"
+          (click)="addMoney()"
+        >
+          Add Funds
+        </button>
+
+      </div>
+
+
+      <div class="paper-money-note">
+        This is a paper-trading account. No real money is involved.
+      </div>
+
+    </div>
+
+  </div>
 
 </div>
