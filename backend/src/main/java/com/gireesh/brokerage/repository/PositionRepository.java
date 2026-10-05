@@ -1,6 +1,15 @@
 package com.gireesh.brokerage.repository;
 
 import com.gireesh.brokerage.entity.Position;
+import com.gireesh.brokerage.entity.Security;
+import com.gireesh.brokerage.entity.TradingAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PositionRepository extends JpaRepository<Position, Long> {}
+import java.util.List;
+import java.util.Optional;
+
+public interface PositionRepository extends JpaRepository<Position, Long> {
+    Optional<Position> findByAccountAndSecurity(TradingAccount account, Security security);
+
+    List<Position> findByAccountOrderBySecuritySymbolAsc(TradingAccount account);
+}

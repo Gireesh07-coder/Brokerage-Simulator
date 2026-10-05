@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 
+/** Retained for legacy schema rows and migration references; not an active domain model. */
 @Entity
+@Deprecated(since = "2026-10", forRemoval = false)
 @Table(
         name = "stock",
         uniqueConstraints = @UniqueConstraint(

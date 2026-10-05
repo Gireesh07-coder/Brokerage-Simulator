@@ -5,7 +5,10 @@ import java.math.BigDecimal;
 
 /** Phase 3 security projection; legacy Stock rows are linked by legacyStockId. */
 @Entity
-@Table(name = "securities")
+@Table(name = "securities", indexes = @Index(
+        name = "idx_securities_symbol_unique",
+        columnList = "symbol",
+        unique = true))
 public class Security {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,5 +48,7 @@ public class Security {
     public boolean isSimulated() { return simulated; }
     public void setSimulated(boolean value) { simulated = value; }
     public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime value) { createdAt = value; }
     public java.time.LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(java.time.LocalDateTime value) { updatedAt = value; }
 }
