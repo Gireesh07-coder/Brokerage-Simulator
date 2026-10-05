@@ -30,4 +30,12 @@ public class AccountController {
     public Account getAccount(@PathVariable Long id) {
         return accountService.getAccount(id);
     }
+
+    @PostMapping("/{id}/deposit")
+    public Account deposit(
+            @PathVariable Long id,
+            @RequestParam BigDecimal amount) {
+
+        return accountService.deposit(id, amount);
+    }
 }

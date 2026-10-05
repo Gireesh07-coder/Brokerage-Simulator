@@ -1,8 +1,11 @@
 package com.gireesh.brokerage.exception;
 
-public class AccountNotFoundException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class AccountNotFoundException extends ApiException {
 
     public AccountNotFoundException(Long id) {
-        super("Account not found with id: " + id);
+        super(HttpStatus.NOT_FOUND, "ACCOUNT_NOT_FOUND",
+                "Account not found with id: " + id);
     }
 }
