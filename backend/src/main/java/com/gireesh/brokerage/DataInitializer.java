@@ -1,10 +1,17 @@
 package com.gireesh.brokerage;
 
 import com.gireesh.brokerage.entity.Security;
+import com.gireesh.brokerage.entity.Role;
+import com.gireesh.brokerage.entity.TradingAccount;
+import com.gireesh.brokerage.entity.User;
 import com.gireesh.brokerage.repository.SecurityRepository;
+import com.gireesh.brokerage.repository.TradingAccountRepository;
+import com.gireesh.brokerage.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -41,6 +48,42 @@ public class DataInitializer {
                     securityRepository.save(security);
                 }
             }
+        };
+    }
+
+    @Bean
+    CommandLineRunner initializeAdmin(
+            UserRepository userRepository,
+            TradingAccountRepository tradingAccountRepository,
+            PasswordEncoder passwordEncoder,
+            @Value("${app.admin.email:}") String adminEmail,
+            @Value("${app.admin.password:}") String adminPassword,
+            @Value("${app.account.starting-cash:100000.00}") BigDecimal startingCash) {
+        return args -> {
+            if (adminEmail.isBlank() && adminPassword.isBlank()) {
+                return;
+            }
+            if (adminEmail.isBlank() || adminPassword.isBlank()) {
+                throw new IllegalStateException(
+                        "ADMIN_EMAIL and ADMIN_PASSWORD must either both be set or both be blank");
+            }
+            String normalizedEmail = adminEmail.trim().toLowerCase(java.util.Locale.ROOT);
+            if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+                return;
+            }
+            if (adminPassword.length() < 8
+                    || !adminPassword.matches("^(?=.*[A-Za-z])(?=.*\\d).+$")) {
+                throw new IllegalStateException(
+                        "ADMIN_PASSWORD must be at least 8 characters and include a letter and a digit");
+            }
+
+            User admin = new User(
+                    normalizedEmail,
+                    passwordEncoder.encode(adminPassword),
+                    "Administrator");
+            admin.setRole(Role.ADMIN);
+            User savedAdmin = userRepository.saveAndFlush(admin);
+            tradingAccountRepository.save(new TradingAccount(savedAdmin, startingCash));
         };
     }
 

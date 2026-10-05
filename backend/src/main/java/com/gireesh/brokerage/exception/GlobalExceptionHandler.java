@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,7 +26,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiError> handleApiException(ApiException exception) {
-        return response(exception.getStatus(), exception.getErrorCode(), exception.getMessage(), Map.of());
+        Map<String, String> errors = exception instanceof ApiValidationException validationException
+                ? validationException.getErrors()
+                : Map.of();
+        return response(exception.getStatus(), exception.getErrorCode(), exception.getMessage(), errors);
+    }
+
+    @ExceptionHandler(LoginRateLimitException.class)
+    public ResponseEntity<ApiError> handleLoginRateLimit(LoginRateLimitException exception) {
+        Map<String, String> errors = Map.of();
+        ApiError body = new ApiError(
+                Instant.now(),
+                exception.getStatus().value(),
+                exception.getErrorCode(),
+                exception.getMessage(),
+                errors);
+        return ResponseEntity.status(exception.getStatus())
+                .header(HttpHeaders.RETRY_AFTER, Long.toString(exception.getRetryAfterSeconds()))
+                .body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
