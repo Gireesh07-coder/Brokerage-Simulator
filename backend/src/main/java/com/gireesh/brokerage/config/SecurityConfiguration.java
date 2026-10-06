@@ -103,7 +103,7 @@ public class SecurityConfiguration {
                 .filter(origin -> !origin.isEmpty())
                 .toList());
         configuration.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Accept", "Content-Type"));
+        configuration.setAllowedHeaders(List.of("Accept", "Content-Type", "Idempotency-Key"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);

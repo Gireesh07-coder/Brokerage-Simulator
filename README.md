@@ -65,12 +65,43 @@ database itself must already exist.
 | `GET` | `/api/securities` | Public; search, sector filter, sorting, pagination |
 | `GET` | `/api/securities/{id-or-symbol}` | Public |
 | `GET` | `/api/admin/users` | Admin |
+| `POST` | `/api/orders` | Signed in; synchronous market order |
+| `GET` | `/api/orders` | Signed in; caller's paginated order history |
+| `GET` | `/api/orders/{orderId}` | Signed in; caller-owned order only |
+| `GET` | `/api/positions` | Signed in; caller's paginated open positions |
+| `GET` | `/api/transactions` | Signed in; caller's paginated trade history |
 
 Register and login bodies are JSON. Registration expects `email`, `password`,
 and `displayName`; login expects `email` and `password`. Passwords must be at
 least 8 characters and include a letter and a digit. Registration creates the
 user and trading account in one transaction and immediately signs the user in.
 Passwords are BCrypt-hashed and are never returned by API responses.
+
+### Market trading
+
+Submit a market order with `POST /api/orders`, an `Idempotency-Key` header
+(1–100 non-blank characters), and a JSON body such as
+`{"securityId":12,"side":"BUY","quantity":3}`. `side` is `BUY` or `SELL`;
+quantity must be a positive integer. The account always comes from the signed-in
+user, and any client-supplied account or user ID is ignored. The current
+catalogue price is used synchronously; LIMIT, STOP, and STOP_LIMIT orders are
+not supported.
+
+Execution and ledger prices use two decimal places; all monetary values use
+scale 2 with `HALF_UP`, and position average cost uses scale 6 with `HALF_UP`.
+Charges are zero in this MVP. A buy debits quantity × execution price; a sell
+credits that amount and realizes `(sell price − average cost) × quantity`.
+Insufficient cash or holdings create a persisted `REJECTED` order and return
+422 without changing the account, position, or transaction ledger. Successful
+orders, account changes, position changes, and transaction records commit in a
+single database transaction.
+
+An idempotency key is unique per authenticated account. Repeating the same
+request returns the original order response without another trade; reusing the
+key for different order parameters returns 409. Invalid requests and unknown
+securities do not consume a key. The additive V6 migration adds the key,
+request fingerprint, and account/key uniqueness constraint; it leaves existing
+order rows intact. Do not edit V1–V5.
 
 Use a cookie jar when testing the API with curl:
 
